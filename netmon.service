@@ -1,0 +1,16 @@
+[Unit]
+Description=Home internet monitor (netmon)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=netmon
+Environment=HOME=/var/lib/netmon
+EnvironmentFile=/etc/netmon/env
+ExecStart=/usr/bin/python3 /opt/netmon/netmon.py --config /etc/netmon/netmon.ini run
+StateDirectory=netmon
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
