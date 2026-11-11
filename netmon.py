@@ -133,15 +133,21 @@ def ping(host):
         return False
 
 
+def mac_physical_route():
+    """(gateway, interface) of the first non-VPN default route on macOS, e.g. ("192.168.0.1", "en0")."""
+    out = subprocess.run(["netstat", "-rn", "-f", "inet"], capture_output=True, text=True).stdout
+    for line in out.splitlines():
+        f = line.split()
+        if len(f) >= 4 and f[0] == "default" and f[1].count(".") == 3:
+            return f[1], f[3]
+    return None, None
+
+
 def default_gateway():
     """The LAN router's IP. Skips VPN tunnel routes, which have no gateway address."""
     try:
         if IS_MAC:
-            out = subprocess.run(["netstat", "-rn", "-f", "inet"], capture_output=True, text=True).stdout
-            for line in out.splitlines():
-                f = line.split()
-                if len(f) >= 2 and f[0] == "default" and f[1].count(".") == 3:
-                    return f[1]
+            return mac_physical_route()[0]
         else:
             out = subprocess.run(["ip", "route", "show", "default"], capture_output=True, text=True).stdout.split()
             if "via" in out:
@@ -282,8 +288,11 @@ def speedtest():
         d = run_json([st, "--json", "--secure"])
         return d["download"] / 1e6, d["upload"] / 1e6, d["ping"], d["server"]["sponsor"]
     if shutil.which("networkQuality"):
-        d = run_json(["networkQuality", "-c"])
-        return d["dl_throughput"] / 1e6, d["ul_throughput"] / 1e6, d.get("base_rtt"), "Apple networkQuality"
+        # Bind to the physical interface so a connected VPN doesn't cap the result.
+        iface = mac_physical_route()[1]
+        d = run_json(["networkQuality", "-c", "-s"] + (["-I", iface] if iface else []))
+        server = f"Apple networkQuality ({iface})" if iface else "Apple networkQuality"
+        return d["dl_throughput"] / 1e6, d["ul_throughput"] / 1e6, d.get("base_rtt"), server
     return None
 
 
