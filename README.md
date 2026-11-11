@@ -23,7 +23,7 @@ Outages are classified as **WAN** (router reachable, internet not) or **LAN** (r
 - Slow speed tests, if you set your plan's speeds
 - A daily report
 
-Push alerts go to an ntfy topic. Set `email` to also get recovery alerts and the daily report by email through ntfy.
+Push alerts go to an ntfy topic. To also get recovery alerts and the daily report by email, you need a free ntfy.sh account: verify your email under Account, create an access token, and set `ntfy_token` and `email`. ntfy.sh doesn't send email for anonymous users, and free accounts get 5 emails a day.
 
 ## Install
 

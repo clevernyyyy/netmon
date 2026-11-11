@@ -155,9 +155,11 @@ def default_gateway():
 
 def send_ntfy(cfg, title, body, priority="default", tags="", email=False):
     a = cfg["alerts"]
-    if not a["ntfy_url"]:
-        log(f"(no ntfy_url) {title}: {body}")
+    if not a["ntfy_url"] or "CHANGE-ME" in a["ntfy_url"]:
+        log(f"(ntfy_url not set) {title}: {body}")
         return True
+    if email and a["email"] and not a["ntfy_token"]:
+        log("email is set but ntfy_token is not; ntfy.sh only sends email for accounts, so no email will go out")
     headers = {"Title": title, "Priority": priority}
     if tags:
         headers["Tags"] = tags
